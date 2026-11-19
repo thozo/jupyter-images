@@ -19,7 +19,7 @@ then
 
   rclone config create \
     cernbox webdav \
-    url https://eosc.cernbox.cern.ch/remote.php/webdav/eos/project/e/eosc/users/${NB_USER} \
+    url https://eosc.cernbox.cern.ch/remote.php/webdav \
     vendor other \
     bearer_token_command "cat /tmp/swan_oauth.token"
 
@@ -27,11 +27,18 @@ then
 
   mkdir -p /cernbox
   ln -sfn /cernbox "/home/${NB_USER}/cernbox"
-  rclone mount cernbox: /cernbox \
+  rclone mount cernbox:eos/project/e/eosc/users/${NB_USER} /cernbox \
     --allow-other --uid "$NB_UID" --gid "$NB_GID" \
     --vfs-cache-mode full --vfs-cache-max-size 5G --cache-dir=/tmp/cache/ \
     --dir-cache-time 30s --attr-timeout 10s \
     -v --log-file=/tmp/rclone.log --daemon || cat /tmp/rclone.log
+  
+  mkdir -p /eos/opendata
+  rclone mount cernbox:eos/opendata /eos/opendata \
+    --allow-other --uid "$NB_UID" --gid "$NB_GID" \
+    --vfs-cache-mode full --vfs-cache-max-size 5G --cache-dir=/tmp/cache/ \
+    --dir-cache-time 30s --attr-timeout 10s --read-only \
+    -v --log-file=/tmp/rclone-opendata.log --daemon || cat /tmp/rclone-opendata.log
 else
   _log "Skipping WebDAV configuration";
 fi
